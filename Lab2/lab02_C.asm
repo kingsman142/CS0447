@@ -3,12 +3,12 @@
 	youMadeMsg: .asciiz "\nYou made "
 	computerMadeMsg: .asciiz ", Computer made "
 	period: .asciiz "."
-	youWonMsg: .asciiz "\nYou Won Congratulations"
-	youLostMsg: .asciiz "\nYou lost, Good luck next time"
+	youWonMsg: .asciiz "\n\"You Won Congratulations\"\n\n"
+	youLostMsg: .asciiz "\n\"You lost, Good luck next time\"\n\n"
 	rock: .asciiz "Rock"
 	paper: .asciiz "Paper"
 	scissors: .asciiz "Scissors"
-	newLine: .asciiz "\n"
+	tieMsg: .asciiz "\n\"Tie\"\n\n"
 	
 .text
 	addi $s0, $0, 80
@@ -18,15 +18,12 @@
 	addi $s4, $0, 0
 	addi $s5, $0, 1
 	addi $s6, $0, 2
-
-	#Generate random int with 3 as upper-bound and seed 5
-	addi $v0, $0, 42
-	addi $a0, $0, 5
-	addi $a1, $0, 3
-	syscall
-	add  $t0, $0, $a0
 		
 	loop:
+		j generateComputerMove
+		
+		loopAfterComputerMove:
+	
 		j inputPrompt
 		
 		loopAfterUserInput:
@@ -80,12 +77,35 @@
 		beq  $t1, 1, compareUserInputPaperToComputer
 		beq  $t1, 2, compareUserInputScissorsToComputer
 		
-		j terminate
+		loopAfterGameOutput:
+		
+		j loop
+		
+	generateComputerMove:
+		#Get System time
+		addi $v0, $0, 30
+		syscall
+		#Lower Order system time for RNG Seed
+		addi $t3, $a0, 0
+		
+		#Set RNG Seed
+		addi $v0, $0, 40
+		addi $a1, $t3, 0
+		addi $a0, $0, 0
+		syscall
+	
+		#Generate random int with 3 as upper-bound and seed 5
+		addi $v0, $0, 42
+		addi $a0, $0, 0
+		addi $a1, $0, 3
+		syscall
+		add  $t0, $0, $a0
+		j loopAfterComputerMove
 		
 	loopBack:
 		addi $v0, $0, 4
 		lui  $at, 0x00001001
-		ori  $a0, $at, 0x00000085
+		ori  $a0, $at, 0x0000008D
 		syscall
 		j loop
 		
@@ -123,42 +143,42 @@
 	printUserRock:
 		addi $v0, $0, 4
 		lui  $at, 0x00001001
-		ori  $a0, $at, 0x00000071
+		ori  $a0, $at, 0x00000079
 		syscall
 		j loopAfterUserMoveOutput
 		
 	printUserPaper:
 		addi $v0, $0, 4
 		lui  $at, 0x00001001
-		ori  $a0, $at, 0x00000076
+		ori  $a0, $at, 0x0000007E
 		syscall
 		j loopAfterUserMoveOutput
 		
 	printUserScissors:
 		addi $v0, $0, 4
 		lui  $at, 0x00001001
-		ori  $a0, $at, 0x0000007C
+		ori  $a0, $at, 0x00000084
 		syscall
 		j loopAfterUserMoveOutput
 		
 	printComputerRock:
 		addi $v0, $0, 4
 		lui  $at, 0x00001001
-		ori  $a0, $at, 0x00000071
+		ori  $a0, $at, 0x00000079
 		syscall
 		j loopAfterComputerMoveOutput
 		
 	printComputerPaper:
 		addi $v0, $0, 4
 		lui  $at, 0x00001001
-		ori  $a0, $at, 0x00000076
+		ori  $a0, $at, 0x0000007E
 		syscall
 		j loopAfterComputerMoveOutput
 		
 	printComputerScissors:
 		addi $v0, $0, 4
 		lui  $at, 0x00001001
-		ori  $a0, $at, 0x0000007C
+		ori  $a0, $at, 0x00000084
 		syscall
 		j loopAfterComputerMoveOutput
 		
@@ -177,16 +197,16 @@
 	printUserWon:
 		addi $v0, $0, 4
 		lui  $at, 0x00001001
-		ori  $a0, $at, 0x0000003C
+		ori  $a0, $at, 0x00000039
 		syscall
-		j terminate
+		j loopAfterGameOutput
 		
 	printUserLost:
 		addi $v0, $0, 4
 		lui  $at, 0x00001001
-		ori  $a0, $at, 0x00000052
+		ori  $a0, $at, 0x00000056
 		syscall
-		j terminate
+		j loopAfterGameOutput
 	
 	terminate:
 		addi $v0, $0, 10
