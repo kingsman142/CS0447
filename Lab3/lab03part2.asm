@@ -30,7 +30,7 @@
 		slt  $t0, $v0, $0
 		beq  $t0, 1, integerNegativeErrorX
 		
-		addi $t1, $v0, 0
+		addi $t1, $v0, 0 #Store X
 		
 	promptForY:
 		addi $v0, $0, 4
@@ -43,16 +43,27 @@
 		slt  $t0, $v0, $0
 		beq  $t0, 1, integerNegativeErrorY
 		
-		addi $t2, $v0, 0
-		addi $t4, $v0, 0
+		addi $t2, $v0, 0 #Store Y
+		addi $t7, $t1, 0
+		
+		addi $t6, $t2, 0 #Placeholder for Y
+		addi $t4, $t1, 0 #Placeholder for X
 	
 	multiply:
-		beq  $t4, $0, end
-		add  $t3, $t3, $t1
-		sub  $t4, $t4, 1
+		slti $t5, $t6, 1 
+		beq  $t5, 1, end #Exit if the multiplication factor is 0
+		and  $t7, $t6, 1 #Find least significant bit of Y
+		beq  $t7, 1, shiftAdd #If the least significant bit is 1, add the next number to the result
+		multiplyAfterShift:
+		srl  $t6, $t6, 1 #Shift the X placeholder to the left 1
+		sll  $t4, $t4, 1 #Shift the Y placeholder to the right 1
 		j multiply
 	
 	j end
+	
+	shiftAdd:
+		add  $t3, $t3, $t4 #Store the X*Y result in $t3
+		j multiplyAfterShift
 	
 	integerNegativeErrorX:
 		addi $v0, $0, 4
