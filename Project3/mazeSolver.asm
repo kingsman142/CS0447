@@ -122,7 +122,7 @@ _backtracking:
 		jal  _moveCarForward
 		jal  _backtracking
 		lw   $t0, 0($sp)
-		lw   $ra, 4($sp)		
+		lw   $ra, 4($sp)	
 		addi $sp, $sp, 8
 		beq  $v0, 1, exitRecursiveMovements
 	checkRightWall:
@@ -366,13 +366,13 @@ _removeDuplicatePaths:
 		searchForDuplicates:
 			lh   $t5, 0($t4)
 			addi $t4, $t4, 2
-			beq  $t4, $a0, loopThroughCoordinates # Reached end of path
+			beq  $t4, $a0, finishSearchingForDuplicates # Reached end of path
 			beq  $t5, $t3, setNewDuplicate # Found a duplicate
 			j    searchForDuplicates
 			
 			setNewDuplicate:
 				addi $t2, $t4, 0 # Most recent duplicate is now stored in $t2
-				j finishSearchingForDuplicates
+				j    searchForDuplicates
 		
 		finishSearchingForDuplicates:
 			beq  $t2, $0, loopThroughCoordinates # No duplicates
