@@ -65,10 +65,9 @@ _moveCarForward:
 # Arguments
 # 	a0 - Car's information stored in $t9
 _moveCarBackward:
-	andi $t0, $t9, 0x00000F00 # Get car's orientation initially at the location
-	sll  $t0, $t0, 2 # Get the current direction after turning left
+	andi $t0, $a0, 0x00000F00 # Get car's orientation initially at the location
+	sll  $t0, $t0, 2 # Get the corrent direction after turning left
 	andi $t1, $t9, 0x00000F00
-	andi $t2, $a0, 0x00000F00 # Car's initial orientation, used later to return to initial orientation
 	
 	rotateCarBackward:
 		beq  $t1, $t0, moveCarBackward
@@ -77,27 +76,18 @@ _moveCarBackward:
 		j rotateCarBackward
 	moveCarBackward:
 		addi $t8, $0, 1 # Move car forward once
-	rotateToInitialOrientation:
-		andi $t3, $t9, 0x00000F00
-		beq  $t3, $t2, doneRotatingOrientation
-		addi $t8, $0, 3
-		j    rotateToInitialOrientation
-	doneRotatingOrientation:
 		
 	jr $ra
 
 # Recursively using backtracking to navigate the car from the top-left of the maze
 # 	to the bottom-right.
-# Arguments
-# 	a0 - car information in previous state
 # Return
 # 	v0 - 1 if exit found
 #	     0 otherwise
 _backtracking:
 	andi $t0, $t9, 0x0000000F # Get the status of the neighboring walls
 	andi $t4, $t9, 0xFF000000 # Current row position
-	andi $t5, $t9, 0x00FF0000 # Current column position
-	addi $t7, $t9, 0 # Current car information
+	andi $t5, $t9, 0x00FF0000 # Current column position	
 	
 	lw   $t2, endRow
 	lw   $t3, endColumn
@@ -109,304 +99,58 @@ _backtracking:
 	backtrackingNotSolved:
 	addi $v0, $0, 0 # Maze is not solved yet so don't return yet
 	
-	andi $t6, $t9, 0x00000F00
-	beq  $t6, 0x00000800, north
-	beq  $t6, 0x00000400, east
-	beq  $t6, 0x00000200, south
-	beq  $t6, 0x00000100, west
-	
-	north:
-		checkForwardWallNorth:
-			and  $t1, $t0, 0x00000008 # Check front wall status
-			beq  $t1, 8, checkLeftWallNorth
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $t9, 0
-			jal  _moveCarForward
-			addi $a0, $t7, 0
-			jal  _backtracking
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)	
-			addi $sp, $sp, 16
-			beq  $v0, 1, exitRecursiveMovements
-		checkLeftWallNorth:
-			and  $t1, $t0, 0x00000004 # Check left wall status
-			beq  $t1, 4, checkRightWallNorth
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $t9, 0
-			jal  _moveCarLeft
-			addi $a0, $t7, 0
-			jal  _backtracking
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)		
-			addi $sp, $sp, 16
-			beq  $v0, 1, exitRecursiveMovements
-		checkRightWallNorth:
-			and  $t1, $t0, 0x00000002 # Check right wall status
-			beq  $t1, 2, checkBehindWallNorth
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $t9, 0
-			jal  _moveCarRight
-			addi $a0, $t7, 0
-			jal  _backtracking
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)		
-			addi $sp, $sp, 16
-			beq  $v0, 1, exitRecursiveMovements
-		checkBehindWallNorth:
-			and  $t1, $t0, 0x00000001
-			beq  $t1, 1, exitRecursiveMovements
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $a0, 0
-			jal  _moveCarBackward
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)		
-			addi $sp, $sp, 16
-			j    exitRecursiveMovements
-			beq  $v0, 1, exitRecursiveMovements
-			j    exitRecursiveMovements
-	west:
-		checkRightWallWest:
-			and  $t1, $t0, 0x00000002 # Check right wall status
-			beq  $t1, 2, checkForwardWallWest
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $t9, 0
-			jal  _moveCarRight
-			addi $a0, $t7, 0
-			jal  _backtracking
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)		
-			addi $sp, $sp, 16
-			beq  $v0, 1, exitRecursiveMovements
-		checkForwardWallWest:
-			and  $t1, $t0, 0x00000008 # Check front wall status
-			beq  $t1, 8, checkLeftWallWest
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $t9, 0
-			jal  _moveCarForward
-			addi $a0, $t7, 0
-			jal  _backtracking
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)	
-			addi $sp, $sp, 16
-			beq  $v0, 1, exitRecursiveMovements
-		checkLeftWallWest:
-			and  $t1, $t0, 0x00000004 # Check left wall status
-			beq  $t1, 4, checkBehindWallWest
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $t9, 0
-			jal  _moveCarLeft
-			addi $a0, $t7, 0
-			jal  _backtracking
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)		
-			addi $sp, $sp, 16
-			beq  $v0, 1, exitRecursiveMovements
-		checkBehindWallWest:
-			and  $t1, $t0, 0x00000001
-			beq  $t1, 1, exitRecursiveMovements
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $a0, 0
-			jal  _moveCarBackward
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)		
-			addi $sp, $sp, 16
-			j    exitRecursiveMovements
-			beq  $v0, 1, exitRecursiveMovements
-			j    exitRecursiveMovements
-	south:
-		checkRightWallSouth:
-			and  $t1, $t0, 0x00000002 # Check right wall status
-			beq  $t1, 2, checkForwardWallSouth
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $t9, 0
-			jal  _moveCarRight
-			addi $a0, $t7, 0
-			jal  _backtracking
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)		
-			addi $sp, $sp, 16
-			beq  $v0, 1, exitRecursiveMovements
-		checkForwardWallSouth:
-			and  $t1, $t0, 0x00000008 # Check front wall status
-			beq  $t1, 8, checkLeftWallSouth
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $t9, 0
-			jal  _moveCarForward
-			addi $a0, $t7, 0
-			jal  _backtracking
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)	
-			addi $sp, $sp, 16
-			beq  $v0, 1, exitRecursiveMovements
-		checkLeftWallSouth:
-			and  $t1, $t0, 0x00000004 # Check left wall status
-			beq  $t1, 4, checkBehindWallSouth
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $t9, 0
-			jal  _moveCarLeft
-			addi $a0, $t7, 0
-			jal  _backtracking
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)		
-			addi $sp, $sp, 16
-			beq  $v0, 1, exitRecursiveMovements
-		checkBehindWallSouth:
-			and  $t1, $t0, 0x00000001
-			beq  $t1, 1, exitRecursiveMovements
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $a0, 0
-			jal  _moveCarBackward
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)		
-			addi $sp, $sp, 16
-			j    exitRecursiveMovements
-			beq  $v0, 1, exitRecursiveMovements
-			j    exitRecursiveMovements
-	east:
-		checkLeftWallEast:
-			and  $t1, $t0, 0x00000004 # Check left wall status
-			beq  $t1, 4, checkRightWallEast
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $t9, 0
-			jal  _moveCarLeft
-			addi $a0, $t7, 0
-			jal  _backtracking
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)		
-			addi $sp, $sp, 16
-			beq  $v0, 1, exitRecursiveMovements
-		checkRightWallEast:
-			and  $t1, $t0, 0x00000002 # Check right wall status
-			beq  $t1, 2, checkForwardWallEast
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $t9, 0
-			jal  _moveCarRight
-			addi $a0, $t7, 0
-			jal  _backtracking
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)		
-			addi $sp, $sp, 16
-			beq  $v0, 1, exitRecursiveMovements
-		checkForwardWallEast:
-			and  $t1, $t0, 0x00000008 # Check front wall status
-			beq  $t1, 8, checkBehindWallEast
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $t9, 0
-			jal  _moveCarForward
-			addi $a0, $t7, 0
-			jal  _backtracking
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)	
-			addi $sp, $sp, 16
-			beq  $v0, 1, exitRecursiveMovements
-		checkBehindWallEast:
-			and  $t1, $t0, 0x00000001
-			beq  $t1, 1, exitRecursiveMovements
-			subi $sp, $sp, 16
-			sw   $a0, 12($sp)
-			sw   $t7, 8($sp)
-			sw   $ra, 4($sp)
-			sw   $t0, 0($sp)
-			addi $a0, $a0, 0
-			jal  _moveCarBackward
-			lw   $t0, 0($sp)
-			lw   $ra, 4($sp)
-			lw   $t7, 8($sp)
-			lw   $a0, 12($sp)		
-			addi $sp, $sp, 16
-			j    exitRecursiveMovements
-			beq  $v0, 1, exitRecursiveMovements
-			j    exitRecursiveMovements
+	checkLeftWall:
+		and  $t1, $t0, 0x00000004 # Check left wall status first
+		beq  $t1, 4, checkForwardWall
+		subi $sp, $sp, 8
+		sw   $ra, 4($sp)
+		sw   $t0, 0($sp)
+		addi $a0, $t9, 0
+		jal  _moveCarLeft
+		jal  _backtracking
+		lw   $t0, 0($sp)
+		lw   $ra, 4($sp)		
+		addi $sp, $sp, 8
+		beq  $v0, 1, exitRecursiveMovements
+	checkForwardWall:
+		and  $t1, $t0, 0x00000008 # Check front wall status
+		beq  $t1, 8, checkRightWall
+		subi $sp, $sp, 8
+		sw   $ra, 4($sp)
+		sw   $t0, 0($sp)
+		addi $a0, $t9, 0
+		jal  _moveCarForward
+		jal  _backtracking
+		lw   $t0, 0($sp)
+		lw   $ra, 4($sp)	
+		addi $sp, $sp, 8
+		beq  $v0, 1, exitRecursiveMovements
+	checkRightWall:
+		and  $t1, $t0, 0x00000002 # Check right wall status
+		beq  $t1, 2, checkBehindWall
+		subi $sp, $sp, 8
+		sw   $ra, 4($sp)
+		sw   $t0, 0($sp)
+		addi $a0, $t9, 0
+		jal  _moveCarRight
+		jal  _backtracking
+		lw   $t0, 0($sp)
+		lw   $ra, 4($sp)		
+		addi $sp, $sp, 8
+		beq  $v0, 1, exitRecursiveMovements
+	checkBehindWall:
+		and  $t1, $t0, 0x00000001
+		beq  $t1, 1, exitRecursiveMovements
+		subi $sp, $sp, 8
+		sw   $ra, 4($sp)
+		sw   $t0, 0($sp)
+		addi $a0, $t9, 0
+		jal  _moveCarBackward
+		jal  _backtracking
+		lw   $t0, 0($sp)
+		lw   $ra, 4($sp)		
+		addi $sp, $sp, 8
+		beq  $v0, 1, exitRecursiveMovements
 	exitRecursiveMovements:
 	
 	jr $ra
@@ -677,5 +421,4 @@ main:
 	addi $t8, $0, 2
 	addi $t8, $0, 2
 	
-	addi $a0, $t9, 0
 	jal _backtracking

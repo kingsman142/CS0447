@@ -1,0 +1,23 @@
+I included two files in this .zip file:
+
+mazeSolver.asm - 
+	This file uses the correct left hand rule, as well as the correct traceback.
+	However, when it goes to do backtracking, it uses Tan's way (North, West, South, then East)
+	which I believe is illogical, but I used it regardless. When the car backtracks,
+	it has to turn in some crazy ways in order to make this algorithm work. If you want to see
+	the program with Tan's algorithm, which is in the project description, run this file.
+
+myMazeSolverBacktrackingSolution -
+	This file uses the correct land hand rule and correct traceback as the other file.
+	However, for backtracking, it uses the most logical algorithm possible (Check left,
+	then check forward, then check right, then backtrack), or at least more logical than Tan's
+	algorithm. With this algorithm, it essentially turns out being similar to the left hand rule,
+	but recursively, which is the main goal of the backtracking in this project, to see if you can 
+	use recursion properly, which is what this file does. If you want to use a better algorithm
+	that correctly uses recursion while not requiring the driver to correct its orientation when
+	it backtracks, and uses a more logical algorithm, run this file.
+
+Both files work properly, but they just use slightly different backtracking algorithms.
+The only reason I included both was to make sure I didn't lose points because I didn't use Tan's
+algorithm, while also making sure the car didn't have to correct its orientation every time it
+backtracks and lose points because it looks "ugly".
